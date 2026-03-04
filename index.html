@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>104 職缺比較器</title>
+    <meta name="description" content="比較多個 104 人力銀行職缺，快速找到最適合你的工作">
+    <meta property="og:title" content="104 職缺比較器">
+    <meta property="og:description" content="貼上 104 職缺網址，快速比較薪資、地點、技能要求，找到最適合你的工作">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="104 職缺比較器">
+    <meta name="twitter:description" content="貼上 104 職缺網址，快速比較薪資、地點、技能要求">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    <div class="bg-gradient"></div>
+    <div class="floating-orb orb-1"></div>
+    <div class="floating-orb orb-2"></div>
+    <div class="floating-orb orb-3"></div>
+
+    <header id="header">
+        <div class="header-content">
+            <h1>
+                <span class="logo-icon">⚡</span>
+                104 職缺比較器
+            </h1>
+            <p class="subtitle">貼上職缺連結，快速比較工作條件</p>
+        </div>
+    </header>
+
+    <main>
+        <!-- Input Section -->
+        <section id="input-section" class="glass-card input-card">
+            <div class="input-wrapper">
+                <div class="input-group">
+                    <div class="input-icon">🔗</div>
+                    <textarea id="job-url-input" rows="2"
+                        placeholder="貼上 104 職缺網址（支援多筆，每行一個或逗號分隔）&#10;按「新增比較」或 Ctrl+Enter 送出"
+                        autocomplete="off"></textarea>
+                    <button id="add-job-btn" class="btn-primary">
+                        <span class="btn-text">新增比較</span>
+                        <span class="btn-loading hidden">
+                            <span class="spinner"></span>
+                        </span>
+                    </button>
+                </div>
+                <div id="input-error" class="input-error hidden"></div>
+                <!-- Batch Progress Bar -->
+                <div id="batch-progress" class="batch-progress hidden">
+                    <div class="batch-progress-header">
+                        <span id="batch-status" class="batch-status">正在擷取...</span>
+                        <span id="batch-count" class="batch-count">0 / 0</span>
+                    </div>
+                    <div class="batch-bar-track">
+                        <div id="batch-bar-fill" class="batch-bar-fill" style="width:0%"></div>
+                    </div>
+                </div>
+                <div class="input-hints">
+                    <span class="hint-tag">💡 支援多筆網址，每行一個或用逗號分隔</span>
+                    <span class="hint-tag" id="job-count-tag">📊 目前 0 個職缺</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Job Selection Panel -->
+        <section id="job-pool" class="glass-card job-pool-card hidden">
+            <div class="pool-header">
+                <h2 class="section-title">📋 職缺清單</h2>
+                <div class="pool-actions">
+                    <button id="select-all-btn" class="btn-mini" title="全選">全選</button>
+                    <button id="deselect-all-btn" class="btn-mini" title="取消全選">全不選</button>
+                </div>
+            </div>
+            <div id="job-pool-list" class="job-pool-list">
+                <!-- Checkbox items rendered dynamically -->
+            </div>
+            <div class="pool-footer">
+                <span id="pool-selected-count" class="pool-count">已選 0 / 0 個職缺進行比較</span>
+            </div>
+        </section>
+
+        <!-- Field Filter Bar -->
+        <section id="field-filter" class="glass-card field-filter-card hidden">
+            <div class="filter-header">
+                <h2 class="section-title">🔍 顯示欄位</h2>
+                <span class="filter-hint">點擊切換要比較的資訊</span>
+            </div>
+            <div id="field-chips" class="field-chips">
+                <!-- Chips rendered dynamically -->
+            </div>
+            <!-- Custom Keyword Input -->
+            <div id="keyword-section" class="keyword-section">
+                <div class="keyword-header">
+                    <span class="keyword-title">📎 自訂偵測關鍵字</span>
+                    <span class="keyword-hint">輸入要從工作內容中偵測的技能詞彙</span>
+                </div>
+                <div class="keyword-input-row">
+                    <input type="text" id="keyword-input" class="keyword-input" placeholder="輸入關鍵字，例如：Scrum, K8s, LLM">
+                    <button id="add-keyword-btn" class="btn-mini">新增</button>
+                </div>
+                <div id="custom-keywords" class="custom-keywords"></div>
+            </div>
+        </section>
+
+        <!-- Quick Stats Bar -->
+        <section id="stats-bar" class="hidden">
+            <div class="stats-grid">
+                <div class="stat-item glass-card-mini">
+                    <span class="stat-icon">📊</span>
+                    <span class="stat-label">比較中</span>
+                    <span class="stat-value" id="stat-count">0</span>
+                </div>
+                <div class="stat-item glass-card-mini">
+                    <span class="stat-icon">💰</span>
+                    <span class="stat-label">最高薪資</span>
+                    <span class="stat-value" id="stat-max-salary">-</span>
+                </div>
+                <div class="stat-item glass-card-mini">
+                    <span class="stat-icon">🏷️</span>
+                    <span class="stat-label">共同技能</span>
+                    <span class="stat-value" id="stat-common-skills">-</span>
+                </div>
+                <div class="stat-item glass-card-mini">
+                    <span class="stat-icon">📍</span>
+                    <span class="stat-label">工作城市</span>
+                    <span class="stat-value" id="stat-locations">-</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Comparison Matrix Section -->
+        <section id="skill-summary" class="glass-card hidden">
+            <h2 class="section-title">🎯 比較對照表</h2>
+            <div id="skill-matrix"></div>
+        </section>
+
+        <!-- Job Cards Grid -->
+        <section id="jobs-container">
+            <div id="jobs-grid" class="jobs-grid">
+                <!-- Job cards rendered dynamically -->
+            </div>
+            <div id="empty-state" class="empty-state">
+                <div class="empty-icon">📋</div>
+                <h3>還沒有職缺</h3>
+                <p>在上方輸入 104 職缺網址開始比較</p>
+                <div class="demo-urls">
+                    <p class="demo-label">試試看：</p>
+                    <button class="demo-btn" data-url="https://www.104.com.tw/job/8t66t">
+                        📌 軟體產品開發技術經理
+                    </button>
+                    <button class="demo-btn" data-url="https://www.104.com.tw/job/8t676">
+                        📌 技術長
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>104 職缺比較器 — 資料來源 <a href="https://www.104.com.tw" target="_blank">104 人力銀行</a></p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
