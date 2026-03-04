@@ -1189,7 +1189,72 @@ function loadFromStorage() {
     }
 }
 
+// ─── CSV Export ───────────────────────────────────────────────────
+function csvEscape(val) {
+    if (val == null) return '';
+    const str = String(val);
+    if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+        return '"' + str.replace(/"/g, '""') + '"';
+    }
+    return str;
+}
+
+function exportCSV() {
+    const selectedJobs = getSelectedJobs();
+    if (selectedJobs.length === 0) {
+        showToast('⚠️ 請先勾選要匯出的職缺');
+        return;
+    }
+
+    const headers = [
+        '職缺名稱', '公司名稱', '職缺連結', '公司連結',
+        '薪資待遇', '工作地點', '地址', '經歷要求', '學歷要求',
+        '技能要求', '工具', '語言能力', '偵測技能（從工作內容）',
+        '工作內容', '福利', '其他條件', '更新日期'
+    ];
+
+    const rows = selectedJobs.map(job => {
+        const detected = detectSkillsFromDescription(job);
+        return [
+            job.title,
+            job.company,
+            job.url,
+            job.companyUrl,
+            job.salary,
+            job.location,
+            job.locationDetail,
+            job.experience,
+            job.education,
+            (job.skills || []).join('、'),
+            (job.tools || []).join('、'),
+            (job.languages || []).join('、'),
+            detected.join('、'),
+            job.jobDescription,
+            job.welfareText,
+            job.others,
+            job.updateDate,
+        ].map(csvEscape);
+    });
+
+    // UTF-8 BOM for Excel compatibility
+    const bom = '\uFEFF';
+    const csvContent = bom + [headers.map(csvEscape).join(','), ...rows.map(r => r.join(','))].join('\r\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const timestamp = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `104職缺比較_${timestamp}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    showToast(`✅ 已匯出 ${selectedJobs.length} 個職缺的 CSV`);
+}
+
 // ─── Event Listeners ──────────────────────────────────────────────
+document.getElementById('export-csv-btn').addEventListener('click', exportCSV);
+
 dom.addBtn.addEventListener('click', () => {
     const val = dom.input.value.trim();
     if (!val) return;
